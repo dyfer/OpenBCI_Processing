@@ -1,3 +1,11 @@
+### This is a fork of OpenBCI_Processing prepared for the Art&Brain class taught in Spring 2016 at [DXARTS](https://dxarts.washington.edu/).
+
+Students: Please make sure you select a proper branch (**DXARTS_Art&Brain2016** and *not* master) before downloading!
+
+--------------------------------------------------
+----------  Original readme below       ----------
+--------------------------------------------------
+
 For the full getting started guide, go to [our Docs page](http://docs.openbci.com/tutorials/01-GettingStarted).
 
 ### 1. Download Processing for your operating system
@@ -50,7 +58,7 @@ d. Once the GUI is running, select "SYNTHETIC (algorithmic)" and hit the "START 
 
 ![Start Data Stream](readme-assets/StartDataStream.png)
 
-e. Click the dark overlay on the GUI to exit the SYSTEM CONTROL PANEL and then hit the "Start Data Stream" button to begin the stream of synthetically generated EEG data. You should then see data streaming across the "EEG Data" graph on the left side of the GUI. 
+e. Click the dark overlay on the GUI to exit the SYSTEM CONTROL PANEL and then hit the "Start Data Stream" button to begin the stream of synthetically generated EEG data. You should then see data streaming across the "EEG Data" graph on the left side of the GUI.
 
 # OpenBCI_Processing_3
 Updated OpenBCI Processing GUI for Processing 3.0

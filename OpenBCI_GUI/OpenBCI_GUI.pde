@@ -24,6 +24,14 @@ import java.util.*; //for Array.copyOfRange()
 import java.util.Map.Entry;
 import processing.serial.*;  //for serial communication to Arduino/OpenBCI
 import java.awt.event.*; //to allow for event listener on screen resize
+import oscP5.*;
+import netP5.*;
+
+OscP5 oscP5;
+NetAddress myRemoteLocation;
+
+int oscSendToPort = 8100;
+String oscSendToHost = "127.0.0.1"; //use "127.0.0.1" for sending to another app on the same computer 
 
 boolean isVerbose = false; //set true if you want more verbosity in console.. verbosePrint("print_this_thing") is used to output feedback when isVerbose = true
 
@@ -176,7 +184,7 @@ void setup() {
   f1 = createFont("fonts/Raleway-SemiBold.otf", 16);
   f2 = createFont("fonts/Raleway-Regular.otf", 15);
   f3 = createFont("fonts/Raleway-SemiBold.otf", 15);
-  
+
   //V2 FONTS
   //f1 = createFont("fonts/Montserrat-SemiBold.otf", 16);
   //f2 = createFont("fonts/Montserrat-Light.otf", 15);
@@ -218,7 +226,7 @@ void setup() {
 
   playground = new Playground(navBarHeight);
 
-  //attempt to open a serial port for "output"
+  //attempt to open a serial port for "output"  
   try {
     verbosePrint("OpenBCI_GUI.pde:  attempting to open serial port for data output = " + serial_output_portName);
     serial_output = new Serial(this, serial_output_portName, serial_output_baud); //open the com port
@@ -227,6 +235,10 @@ void setup() {
   catch (RuntimeException e) {
     verbosePrint("OpenBCI_GUI.pde: *** ERROR ***: Could not open " + serial_output_portName);
   }
+
+  //init OSC
+  oscP5 = new OscP5(this, oscSendToPort + 1000); //offset receiving port (which we're not using anyway....) to not block other apps from reading from it
+  myRemoteLocation = new NetAddress(oscSendToHost, oscSendToPort);
 }
 //====================== END--OF ==========================//
 //========================SETUP============================//
@@ -586,7 +598,7 @@ void systemDraw() { //for drawing to the screen
   // use commented code below to verify frameRate and check latency
   // println("Time since start: " + millis() + " || Time since last frame: " + str(millis()-timeOfLastFrame));
   // timeOfLastFrame = millis();
-  
+
   //if(!drawHand) {
   //  cursor(ARROW); 
   //}
@@ -639,9 +651,15 @@ int getDataIfAvailable(int pointCounter) {
         //gather the data into the "little buffer"
         for (int Ichan=0; Ichan < nchan; Ichan++) {
           //scale the data into engineering units..."microvolts"
-          yLittleBuff_uV[Ichan][pointCounter] = dataPacketBuff[lastReadDataPacketInd].values[Ichan]* openBCI.get_scale_fac_uVolts_per_count();
+          yLittleBuff_uV[Ichan][pointCounter] = dataPacketBuff[lastReadDataPacketInd].values[Ichan] * openBCI.get_scale_fac_uVolts_per_count();
         }
         pointCounter++;
+              //raw osc
+      OscMessage myMessage = new OscMessage("/raw");
+      for (int Ichan=0; Ichan < nchan; Ichan++) {
+        myMessage.add(dataPacketBuff[lastReadDataPacketInd].values[Ichan] * openBCI.get_scale_fac_uVolts_per_count());
+      }
+      oscP5.send(myMessage, myRemoteLocation);
       } //close the loop over data points
       //if (eegDataSource==DATASOURCE_PLAYBACKFILE) println("OpenBCI_GUI: getDataIfAvailable: currentTableRowIndex = " + currentTableRowIndex);
       //println("OpenBCI_GUI: getDataIfAvailable: pointCounter = " + pointCounter);
@@ -805,6 +823,13 @@ void serialEvent(Serial port) {
       newPacketCounter++;
 
       fileoutput.writeRawData_dataPacket(dataPacketBuff[curDataPacketInd], openBCI.get_scale_fac_uVolts_per_count(), openBCI.get_scale_fac_accel_G_per_count());
+
+      //raw osc
+      OscMessage myMessage = new OscMessage("/raw");
+      for (int Ichan=0; Ichan < nchan; Ichan++) {
+        myMessage.add(dataPacketBuff[curDataPacketInd].values[Ichan]* openBCI.get_scale_fac_uVolts_per_count());
+      }
+      oscP5.send(myMessage, myRemoteLocation);
     }
   } else {
     println("OpenBCI_GUI: serialEvent: received serial data NOT from OpenBCI.");
