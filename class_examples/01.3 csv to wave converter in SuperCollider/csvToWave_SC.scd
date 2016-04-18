@@ -105,14 +105,14 @@ processWave = {|loFreq = 7, hiFreq = 13|
 		// -> rq = (hi - lo) / ((lo+hi)/2)
 		filtSig = BPF.ar(sig, (loFreq+hiFreq)/2, (hiFreq - loFreq) / ((loFreq+hiFreq)/2));
 		    Out.ar(0, filtSig);
-	}).add;
+	}).load;
 	{
 		score = [
 			    [0, [\s_new, \filtered, 1000, 0, 0]],
 			    [duration, [\c_set, 0, 0]] // finish
 		    ];
 		options = ServerOptions.new.numInputBusChannels_(numCh).numOutputBusChannels_(numCh).sampleRate_(fs_Hz); // mono output
-		Score.recordNRT(score, oscFilePath, processedOutputPath, outputPath, fs_Hz, "WAV", "float", options, "", duration, {"Writing file done!".postln}); // synthesize
+		Score.recordNRT(score, oscFilePath, processedOutputPath, outputPath, fs_Hz, "WAV", "float", options, "", duration, {File.delete(oscFilePath); "Writing file done!".postln}); // synthesize
 	}.defer(1);
 };
 
