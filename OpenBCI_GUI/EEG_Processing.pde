@@ -151,7 +151,7 @@ class EEG_Processing_User {
 class EEG_Processing {
   private float fs_Hz;  //sample rate
   private int nchan;
-  final int N_FILT_CONFIGS = 5;
+  final int N_FILT_CONFIGS = 6;
   FilterConstants[] filtCoeff_bp = new FilterConstants[N_FILT_CONFIGS];
   final int N_NOTCH_CONFIGS = 3;
   FilterConstants[] filtCoeff_notch = new FilterConstants[N_NOTCH_CONFIGS];
@@ -261,6 +261,18 @@ class EEG_Processing {
         filt_txt = "Bandpass 5-50Hz";
         short_txt = "5-50 Hz";
         break;      
+      case 4:
+        //[b,a]=butter(2,[0.5 7]/(250/2)); %matlab command
+        //format long to instpect values
+        b = new double[] {  
+          0.005970418741075, 0.0f, -0.011940837482149, 0.0f, 0.005970418741075
+        };       
+        a = new double[] { 
+          1.0f, -3.765661649668457, 5.325503657631979, -3.353556645049574, 0.793719009223247
+        };
+        filt_txt = "Bandpass 0.5-7Hz";
+        short_txt = "0.5-7 Hz";
+        break;  
       default:
         //no filtering
         b = new double[] {
