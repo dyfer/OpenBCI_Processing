@@ -27,8 +27,19 @@ import java.awt.event.*; //to allow for event listener on screen resize
 import oscP5.*;
 import netP5.*;
 
+// comment this out if you don't have this library/don't want to use OpenViBE
+import fr.inria.openvibelink.write.*;
+
 OscP5 oscP5;
 NetAddress myRemoteLocation;
+
+// stream to OpenViBE stuff ----
+boolean streamToOpenViBE = true;
+
+// ugly hack to speedup streaming upon "h" key hit -- disable GUI update
+boolean TOupdate = true;
+
+// end of OpenVoBE
 
 int oscSendToPort = 8100;
 String oscSendToHost = "127.0.0.1"; //use "127.0.0.1" for sending to another app on the same computer 
