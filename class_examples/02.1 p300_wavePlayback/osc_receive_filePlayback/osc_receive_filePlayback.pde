@@ -16,7 +16,8 @@ Minim minim;
 AudioPlayer player;
 
 int oscReceivePort = 8100; //this should match the sending port in OpenBCI app
-String filePath = "Auditory.Oddball.Meter.wav"; //can be relative to current sketch directory (????)
+//String filePath = "samples/Auditory.Oddball.Meter.wav"; //can be relative to current sketch directory
+String filePath = "samples/reich.wav"; //can be relative to current sketch directory
 
 boolean isPlaying = false;
 

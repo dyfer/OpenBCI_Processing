@@ -26,19 +26,27 @@ import processing.serial.*;  //for serial communication to Arduino/OpenBCI
 import java.awt.event.*; //to allow for event listener on screen resize
 import oscP5.*;
 import netP5.*;
+import processing.net.*;
 
-// comment this out if you don't have this library/don't want to use OpenViBE
-import fr.inria.openvibelink.write.*;
+// comment this out if you don't have this library/don't want to use OpenViBE; also see streamToOpenViBE below
+//import fr.inria.openvibelink.write.*;
 
 OscP5 oscP5;
 NetAddress myRemoteLocation;
 
 // stream to OpenViBE stuff ----
-boolean streamToOpenViBE = true;
-
+boolean streamToOpenViBE = false;
 // ugly hack to speedup streaming upon "h" key hit -- disable GUI update
 boolean TOupdate = true;
-
+/** config for TCP server **/
+//WriteAnalog ovWriter;
+final int TCPServerPort = 12346;
+// FIXME: should use openBCI.fs_Hz instead
+//final int TCPSampleRate = 256;
+final int TCPSampleRate = -256;
+// 1.024 to go from 250hz to 256
+final float TCPSamplingRatio = 1.024;
+/** end config TCP server **/
 // end of OpenVoBE
 
 int oscSendToPort = 8100;
@@ -355,6 +363,21 @@ void initSystem() {
   //sync GUI default settings with OpenBCI's default settings...
   // openBCI.syncWithHardware(); //this starts the sequence off ... read in OpenBCI_ADS1299 iterates through the rest based on the ASCII trigger "$$$"
   // verbosePrint("OpenBCI_GUI: initSystem: -- Init 5 [COMPLETE] --");
+  if (streamToOpenViBE) {
+    // init server
+    println("Init TCP server for openvibe: " + nchan + " channels.");
+    //ovWriter = new WriteAnalog(this, TCPServerPort, nchan, (int) openBCI.fs_Hz);
+    // should round openBCI.fs_Hz to next power of 2 instead
+    if (TCPSampleRate > 0) {
+      //ovWriter = new WriteAnalog(this, TCPServerPort, nchan, TCPSampleRate); //comment out to disable streaming
+      println("Using sampling rate: " + TCPSampleRate);
+    } else if (TCPSamplingRatio > 0) {
+      //ovWriter = new WriteAnalog(this, TCPServerPort, nchan, TCPSamplingRatio); //comment out to disable streaming
+      println("Using sampling ratio: " + TCPSamplingRatio);
+    } else {
+      //ovWriter = new WriteAnalog(this, TCPServerPort, nchan); //comment out to disable streaming
+    }
+  }
 }
 
 //so data initialization routines
@@ -665,12 +688,12 @@ int getDataIfAvailable(int pointCounter) {
           yLittleBuff_uV[Ichan][pointCounter] = dataPacketBuff[lastReadDataPacketInd].values[Ichan] * openBCI.get_scale_fac_uVolts_per_count();
         }
         pointCounter++;
-              //raw osc
-      OscMessage myMessage = new OscMessage("/raw");
-      for (int Ichan=0; Ichan < nchan; Ichan++) {
-        myMessage.add(dataPacketBuff[lastReadDataPacketInd].values[Ichan] * openBCI.get_scale_fac_uVolts_per_count());
-      }
-      oscP5.send(myMessage, myRemoteLocation);
+        //raw osc
+        OscMessage myMessage = new OscMessage("/raw");
+        for (int Ichan=0; Ichan < nchan; Ichan++) {
+          myMessage.add(dataPacketBuff[lastReadDataPacketInd].values[Ichan] * openBCI.get_scale_fac_uVolts_per_count());
+        }
+        oscP5.send(myMessage, myRemoteLocation);
       } //close the loop over data points
       //if (eegDataSource==DATASOURCE_PLAYBACKFILE) println("OpenBCI_GUI: getDataIfAvailable: currentTableRowIndex = " + currentTableRowIndex);
       //println("OpenBCI_GUI: getDataIfAvailable: pointCounter = " + pointCounter);
@@ -787,6 +810,11 @@ void processNewData() {
 
   //compute the electrode impedance. Do it in a very simple way [rms to amplitude, then uVolt to Volt, then Volt/Amp to Ohm]
   for (int Ichan=0; Ichan < nchan; Ichan++) data_elec_imp_ohm[Ichan] = (sqrt(2.0)*eegProcessing.data_std_uV[Ichan]*1.0e-6) / openBCI.get_leadOffDrive_amps();
+  
+  if(streamToOpenViBE) {
+    // send last buffer to TCP
+  //ovWriter.write(yLittleBuff_uV); //comment out to disable streaming
+  };
 }
 
 //helper function in handling the EEG data
