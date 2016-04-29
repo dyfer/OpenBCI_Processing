@@ -23,7 +23,9 @@ thisProcess.openUDPPort(receivePort); // attempt to open 8100 for streaming eeg
 MIDIClient.init;
 MIDIIn.connectAll;
 
-~mitiOut = MIDIOut.newByName("X-TOUCH COMPACT", "X-TOUCH COMPACT");
+try{
+	~midiOut = MIDIOut.newByName("X-TOUCH COMPACT", "X-TOUCH COMPACT");
+};
 
 ~freeAll = {
 	[~inBus, ~bfBus, ~rawBus, ~processedBus, ~def, ~defCC, ~rawNote, ~ccNote, ~decNote, ~touchResp].do(_.free);
@@ -157,7 +159,9 @@ s.waitForBoot({
 		ccData = msg[3..]; // 1 and up
 		ccData.do({|thisVal, inc|
 			if(isTouched[inc].not, {
-				~mitiOut.control(0, 1 + inc, thisVal.linlin(0, 1, 0, 127, \minmax));
+				try{
+					~midiOut.control(0, 1 + inc, thisVal.linlin(0, 1, 0, 127, \minmax));
+				};
 				(~percSynths ++ ~memSynths)[inc].amp_([0.0, 10.dbamp, 4.7].asSpec.map(thisVal));
 			}, {
 				// var msg = "Fader " ++ inc.asString ++ " touched, not setting the amp";
@@ -172,28 +176,31 @@ s.waitForBoot({
 		// isTouched.postln;
 	}, (101..108), 0, \control);
 
-	~midiBut = MIDICV(0, \unipolar.asSpec).button(16);
+	try{
+		~midiBut = MIDICV(0, \unipolar.asSpec).button(16);
 
-	~startBrainFaders = {|val|
-		if(val.asBoolean, {
-			~ccNote.free;
-			~ccNote = ~synths[\ampFollower].note(addAction: \tail)
-			.in_(~rawBus)
-			.lag_(0.5)
-			.lagShape_(0)
-			.minVal_(0)
-			.maxVal_(5)
-			.ampAtt_(0.2)
-			.ampRel_(0.5)
-			.triggerRate_(60)
-			.play;
-		}, {
-			~ccNote.free;
-		});
+		~startBrainFaders = {|val|
+			if(val.asBoolean, {
+				~ccNote.free;
+				~ccNote = ~synths[\ampFollower].note(addAction: \tail)
+				.in_(~rawBus)
+				.lag_(0.5)
+				.lagShape_(0)
+				.minVal_(0)
+				.maxVal_(5)
+				.ampAtt_(0.2)
+				.ampRel_(0.5)
+				.triggerRate_(60)
+				.play;
+			}, {
+				~ccNote.free;
+			});
+		};
+		~midiBut.makeToggle;
+		~midiBut.toggleCV.connectTo(~startBrainFaders);			// remember to connect it!
+		~midiBut.mirrorHWToggle(destPort: 1); //this might not work....
+
 	};
-	~midiBut.makeToggle;
-	~midiBut.toggleCV.connectTo(~startBrainFaders);			// remember to connect it!
-	~midiBut.mirrorHWToggle(destPort: 1); //this might not work....
 
 
 
@@ -232,6 +239,7 @@ s.waitForBoot({
 
 	s.sync;
 	//now midi controller
+	try{
 	~vCtl = 8.collect{|i| MIDICV(0, [0.0, 10.dbamp, 4.7].asSpec).cc(i+1)};
 
 	// connect midi control values to amp param
@@ -267,6 +275,7 @@ s.waitForBoot({
 		"Lag: ".post;
 		sc.round(0.01).postln;
 	});
+	}
 
 });
 
@@ -276,18 +285,23 @@ s.waitForBoot({
 //------ free ------
 ~freeAll.();
 
-s.makeGui
 
+//----- recording -----
 
-//move faders automatically
-~ccNote = ~synths[\ampFollower].note(addAction: \tail).in_(~rawBus).lag_(0.5).lagShape_(0).minVal_(0).maxVal_(5).ampAtt_(0.2).ampRel_(0.5).triggerRate_(60).play;
+//start
+(
+fork{
+	s.prepareForRecord; // if you want to start recording on a precise moment in time, you have to call this first.
+	0.2.wait;
+	s.record;
+}
+)
 
-~ccNote.free; //stop
-
-//tweak params
-~ccNote.lag_(2);
-~ccNote.minVal_(0).maxVal_(20);
-~ccNote.triggerRate_(60);
+//stop
+(
+s.stopRecording; // this closes the file and deallocates the buffer recording node, etc.
+thisProcess.platform.recordingsDir.openOS; //look into recordings folder
+)
 
 
 
@@ -298,6 +312,16 @@ s.makeGui
 //-------------------
 
 s.plotTree
+
+//move faders automatically
+~ccNote = ~synths[\ampFollower].note(addAction: \tail).in_(~rawBus).lag_(0.5).lagShape_(0).minVal_(0).maxVal_(5).ampAtt_(0.2).ampRel_(0.5).triggerRate_(60).play;
+
+~ccNote.free; //stop
+
+//tweak params
+~ccNote.lag_(2);
+~ccNote.minVal_(0).maxVal_(20);
+~ccNote.triggerRate_(60);
 
 
 x = ~perc.note(addAction: \before, target: w ).freq_(800).in_gain_(12.dbamp).amp_(0.dbamp).inbus_(~processedBus).outbus_(~bfBus).az_(-30.degrad).lim_(24.dbamp).play;
@@ -342,6 +366,7 @@ mem_angs = Array.series(4, 45, 90).degrad;
 )
 
 ~memSynths.do{ arg me; me.amp_(-13.dbamp) }
+~memSynths.do{ arg me; me.amp_(0) }
 
 ~memSynths.do{ arg me; me.tension.postln}
 
