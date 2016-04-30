@@ -1,10 +1,11 @@
-
+OSCFunc.trace(false)
 s.plotTree
 (
 var receivePort = 8100, numChannels = 8;
 var synths;
-var decType = \stereo; //\stereo or \bf
+var decType = \bf; //\stereo or \bf
 var firstOutput = 0;
+var gloablAmp = -12.dbamp;
 var isTouched;
 thisProcess.openUDPPort(receivePort); // attempt to open 8100 for streaming eeg
 
@@ -36,6 +37,8 @@ try{
 
 ~freeAll.(); // free when re-running
 
+s.stopRecording; // this closes the file and deallocates the buffer recording node, etc.
+
 isTouched = false ! 8;
 
 s.options.numOutputBusChannels_(4); //for b-format
@@ -43,7 +46,7 @@ s.options.numOutputBusChannels_(4); //for b-format
 s.waitForBoot({
 
 	//synths
-	
+
 	synths = CtkProtoNotes(
 		SynthDef(\rawProcessing, {|in = 0, out = 0, dcCoeff = 0.995, mul = 1, loFreq = 7, hiFreq = 13, whichElectrode = 7|
 			var inSig, outSig, outSigAR, selectedSig;
@@ -130,10 +133,13 @@ s.waitForBoot({
 	~decoder = CtkSynthDef(\decoder, {
 		arg inbus, outbus=0;
 		var in, out;
-		in = In.ar(inbus, 4);
+		in = In.ar(inbus, 4) * gloablAmp;
+		in = FoaEncode.ar(Limiter.ar(FoaDecode.ar(in, FoaDecoderMatrix.newBtoA), -3.dbamp), FoaEncoderMatrix.newAtoB);
+		// in.poll;
 		decType.switch(
 			\stereo, {out = FoaDecode.ar(in, FoaDecoderMatrix.newStereo(60))},
-			\bf, {out = in}
+			\bf, {out = in},
+			{"no proper decder selected!".warn}
 		);
 		Out.ar(outbus, out)
 	});
@@ -145,6 +151,7 @@ s.waitForBoot({
 	~rawBus = Bus.control(Server.default, numChannels);
 	~processedBus = Bus.audio(Server.default, 1);
 
+	s.sync;
 	//responders
 	~def = OSCdef(\rawEEG, {|msg|
 		var rawData;
@@ -207,7 +214,7 @@ s.waitForBoot({
 	s.sync;
 	//init notes
 	~rawNote = synths[\rawProcessing].note(addAction: \head).in_(~rawBus).out_(~processedBus).play;
-	~decNote = ~decoder.note(addAction: \tail).inbus_(~bfBus).outbus_(firstOutput).play;
+	~decNote = ~decoder.note(addAction: \tail).inbus_(~bfBus).outbus_(0	).play;
 
 
 	s.sync; //wait for synths to start
@@ -244,9 +251,9 @@ s.waitForBoot({
 
 	// connect midi control values to amp param
 	f = {|val| val.ampdb.postln};
-	
+
 	// [(~percSynths ++ ~memSynths), \amp_ ! 8].flop;
-	
+
 	[(~percSynths ++ ~memSynths), \amp_ ! 8].flop.do{|ctl, i|
 		ctl.postln;
 		~vCtl[i].connectTo(ctl[0], ctl[1]);
@@ -275,7 +282,13 @@ s.waitForBoot({
 		"Lag: ".post;
 		sc.round(0.01).postln;
 	});
-	}
+	};
+
+	fork{
+		s.prepareForRecord; // if you want to start recording on a precise moment in time, you have to call this first.
+		0.2.wait;
+		s.record;
+	};
 
 });
 

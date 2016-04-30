@@ -1,0 +1,17 @@
+Performance of Lucier’s Music for Solo Performer
+Juan Pampin - brain
+Marcin Paczkowski - assistant
+
+electrode assignment to channels (1-based);
+
+1 - n/c
+2 - n/c
+3 - Fz
+4 - Pz
+5 - F8
+6 - F7
+7 - O1
+8 - O2
+
+EEG data is not synchronized with audio/video and has a long period of noise at the beginning
+Performance time was ~9 minutes
