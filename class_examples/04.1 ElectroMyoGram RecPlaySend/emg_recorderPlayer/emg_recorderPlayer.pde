@@ -223,6 +223,7 @@ void keyReleased()
   }
   if (key == 'o')
   {
+    stop();
     selectInput("Select a file to play:", "openFile");
   }
   if (key == 'p')
