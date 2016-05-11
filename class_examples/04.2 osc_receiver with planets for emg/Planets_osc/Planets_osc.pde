@@ -10,7 +10,7 @@ import netP5.*;
 
 int oscReceivePort = 8100; //this should match the sending port in EMG app
 int channelToRead = 0;//0-based; define which channel we use
-float threshold = -24; //for decibel values 
+float threshold = -36; //for decibel values 
 
 //incoming signal, when goes above/below threshold, make the scaler (used to change displacement of planets) to alternate between lo and hi value
 int scaler = 1;
