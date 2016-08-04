@@ -10,11 +10,14 @@ var tempFileReady = false;
 var filterList;
 
 
+//!!!! this seem not to be needed!!!!
 // following calculations are from OpenBCI_ADS1299 in order to convert raw values to uV: scale_fac_uVolts_per_count - multiply every sample frome the sample file by this....
 fs_Hz = 250.0;  //sample rate used by OpenBCI board...set by its Arduino code
 aDS1299_Vref = 4.5;  //reference voltage for ADC in ADS1299.  set by its hardware
 aDS1299_gain = 24.0;  //assumed gain setting for ADS1299.  set by its Arduino code
 scale_fac_uVolts_per_count = aDS1299_Vref / (pow(2,23)-1) / aDS1299_gain  * 1000000; //ADS1299 datasheet Table 7, confirmed through experiment
+
+"scale_fac_uVolts_per_count: ".post; scale_fac_uVolts_per_count.postln;
 
 //note: channelToExtract shoudl be 0-based!
 
@@ -77,7 +80,7 @@ readSF = {|path, updateGUI = true, actionWhenDone = ({})|
 		inputPath = path;
 	});
 	if(path.notNil, {
-		
+
 		Routine.run({
 			var message;
 			"Opening file ".post; path.basename.postln;
@@ -86,7 +89,7 @@ readSF = {|path, updateGUI = true, actionWhenDone = ({})|
 				guiElements[\inputFilePath].string_("Opening file " ++ path.basename ++ " - please wait...");
 			});
 			0.1.wait;
-			
+
 			soundfile = SoundFile.openRead(path);
 			numChannels = soundfile.numChannels;
 			numSamples = soundfile.numFrames;
@@ -152,7 +155,8 @@ writeSF = {arg arrayToWrite = csvArrDataOnly, path = tempInPath, channelToExtrac
 			var thisSubArr, thisFloatArr, progressPercent;
 			try{
 				if(channelToExtract.notNil, {
-					thisSubArr = [thisArr[channelToExtract + 1].asFloat * scale_fac_uVolts_per_count];
+					// thisSubArr = [thisArr[channelToExtract + 1].asFloat * scale_fac_uVolts_per_count];
+					thisSubArr = [thisArr[channelToExtract + 1].asFloat]; //seems scaling is already done when recording!!!!!
 				}, {
 					thisSubArr = thisArr[1..numChannels].asFloat * scale_fac_uVolts_per_count; /*numChannels stays since we start at index 1 (2nd in array)*/
 				});
@@ -285,7 +289,7 @@ processWaveAuto = {arg outPath, actionWhenDone = {}, readToArray = true; //some 
 	});
 	loFreq = filterList[guiElements[\filterMenu].value][1];
 	hiFreq = filterList[guiElements[\filterMenu].value][2];
-	
+
 	processWave.(loFreq, hiFreq, 0.1, channelToExtract, pathIn, pathOut, {
 		if(readToArray, {
 			readSF.(pathOut, false, {actionWhenDone.()});
@@ -344,7 +348,7 @@ window.layout_(
 		),
 		VLayout(
 			StaticText().string_("3. Inspect data"),
-			HLayout( 
+			HLayout(
 				Button().states_([["Plot signal from channel"]]).action_({plot.(guiElements[\chSelectMenu].item, false)}),
 				Button().states_([["[not finished yet] Plot histogram"]]).action_({plot.(guiElements[\chSelectMenu].item, true)}),
 			),
