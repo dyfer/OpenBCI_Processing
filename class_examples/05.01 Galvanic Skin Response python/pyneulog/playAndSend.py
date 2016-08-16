@@ -5,6 +5,8 @@ import pylab
 Loads & plots data from disk
 """
 
+print "this is not working yet!"
+
 data, times, breaktime = load("experiment.dat")
 print data
 pylab.figure()

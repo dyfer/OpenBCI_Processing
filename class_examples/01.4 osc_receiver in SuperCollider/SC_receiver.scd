@@ -4,6 +4,8 @@
 
 //use OpenBCI to stream either prerecorded or live signal, run code below for basic processing
 
+//note: data from OpenBCI is already scaled according to scale_fac_uVolts_per_count!
+
 //2 examples: one outputs on audio bus, one on control bus
 
 //-----------

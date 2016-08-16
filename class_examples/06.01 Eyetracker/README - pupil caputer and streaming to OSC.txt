@@ -3,7 +3,7 @@ https://github.com/pupil-labs/pupil/releases/tag/v0.7.6#downloads
 
 - attach webcam on your head; connect it to the computer
 
-- open Pupil Captire; you should see webcam view in the main window and optionally eye view in a smaller window
+- open Pupil Capture; you should see webcam view in the main window and optionally eye view in a smaller window
 
 - run calibration (press c)
 
@@ -15,7 +15,11 @@ https://github.com/pupil-labs/pupil/releases/tag/v0.7.6#downloads
 sudo pip install pyzmq
 (and type in password + enter when prompted)
 
-- go to python osc bridge
+- if this throws an error about command pip not found, install it with
+sudo easy_install pip
+(in terminal)
+
+- go to the folder of python osc bridge
 
 - run zmq_osc_bridge.py in python
 in terminal:
@@ -23,4 +27,4 @@ cd <drop the python osc bridge folder here>
 python zmq_osc_bridge.py 
 
 - receive OSC in Processing 
-see plan
+see planets_osc in the os_receiver with planets for eye tracker

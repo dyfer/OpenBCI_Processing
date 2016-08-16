@@ -6,9 +6,7 @@ import OSC
 
 """
 Based on https://github.com/thearn/pyneulog
-Record and stream 
-
-Gathers data over two phases. Use a keyboard interrupt (control-c) to end a phase.
+Record and stream to OSC
 
 Saves data to disk afterwards.
 """
@@ -42,8 +40,11 @@ while True: #first phase (eg. 'resting')
         oscMsg.setAddress(OSC_ADDR)
         oscMsg.append(x)        
         oscMsg.append(t);
-        oscClient.send(oscMsg)
-    
+        try:
+            oscClient.send(oscMsg)
+        except:
+            pass
+
     except KeyboardInterrupt:
         break
 

@@ -158,7 +158,8 @@ writeSF = {arg arrayToWrite = csvArrDataOnly, path = tempInPath, channelToExtrac
 					// thisSubArr = [thisArr[channelToExtract + 1].asFloat * scale_fac_uVolts_per_count];
 					thisSubArr = [thisArr[channelToExtract + 1].asFloat]; //seems scaling is already done when recording!!!!!
 				}, {
-					thisSubArr = thisArr[1..numChannels].asFloat * scale_fac_uVolts_per_count; /*numChannels stays since we start at index 1 (2nd in array)*/
+					// thisSubArr = thisArr[1..numChannels].asFloat * scale_fac_uVolts_per_count; /*numChannels stays since we start at index 1 (2nd in array)*/
+					thisSubArr = thisArr[1..numChannels].asFloat; 
 				});
 
 				thisFloatArr = FloatArray.newFrom(thisSubArr);

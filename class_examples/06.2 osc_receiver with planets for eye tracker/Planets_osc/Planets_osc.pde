@@ -160,6 +160,7 @@ void oscEvent(OscMessage theOscMessage) {
 
     return;
   }
+  //todo: add remaining paths here
   //if (theOscMessage.checkAddrPattern("/pupil/diameter")==true) {
   //  //process amp data
   //  float diameter = theOscMessage.get(0).floatValue(); //0-based
