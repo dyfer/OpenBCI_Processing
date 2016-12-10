@@ -35,7 +35,7 @@ OscP5 oscP5;
 NetAddress myRemoteLocation;
 
 // stream to OpenViBE stuff ----
-boolean streamToOpenViBE = false;
+boolean   streamToOpenViBE = false;
 // ugly hack to speedup streaming upon "h" key hit -- disable GUI update
 boolean TOupdate = true;
 /** config for TCP server **/
@@ -50,7 +50,8 @@ final float TCPSamplingRatio = 1.024;
 // end of OpenVoBE
 
 int oscSendToPort = 8100;
-String oscSendToHost = "127.0.0.1"; //use "127.0.0.1" for sending to another app on the same computer 
+String oscSendToHost = "10.45.0.103"; //use "127.0.0.1" for sending to another app on the same computer
+String OscPath = "/raw1"; //configurable
 
 boolean isVerbose = false; //set true if you want more verbosity in console.. verbosePrint("print_this_thing") is used to output feedback when isVerbose = true
 
@@ -194,8 +195,9 @@ void setup() {
   //if (frame != null) frame.setResizable(true);  //make window resizable
   //attach exit handler
   //prepareExitHandler();
-  frameRate(30); //refresh rate ... this will slow automatically, if your processor can't handle the specified rate
-  smooth(); //turn this off if it's too slow
+  frameRate(3); //refresh rate ... this will slow automatically, if your processor can't handle the specified rate
+  //smooth(); //turn this off if it's too slow
+  noSmooth(); //more officient  
 
   surface.setResizable(true);  //updated from frame.setResizable in Processing 2
 
@@ -689,7 +691,8 @@ int getDataIfAvailable(int pointCounter) {
         }
         pointCounter++;
         //raw osc
-        OscMessage myMessage = new OscMessage("/raw");
+        //OscMessage myMessage = new OscMessage("/raw");    
+        OscMessage myMessage = new OscMessage(OscPath);
         for (int Ichan=0; Ichan < nchan; Ichan++) {
           myMessage.add(dataPacketBuff[lastReadDataPacketInd].values[Ichan] * openBCI.get_scale_fac_uVolts_per_count());
         }
@@ -810,10 +813,10 @@ void processNewData() {
 
   //compute the electrode impedance. Do it in a very simple way [rms to amplitude, then uVolt to Volt, then Volt/Amp to Ohm]
   for (int Ichan=0; Ichan < nchan; Ichan++) data_elec_imp_ohm[Ichan] = (sqrt(2.0)*eegProcessing.data_std_uV[Ichan]*1.0e-6) / openBCI.get_leadOffDrive_amps();
-  
-  if(streamToOpenViBE) {
+
+  if (streamToOpenViBE) {
     // send last buffer to TCP
-  //ovWriter.write(yLittleBuff_uV); //comment out to disable streaming
+    //ovWriter.write(yLittleBuff_uV); //comment out to disable streaming
   };
 }
 
@@ -864,7 +867,8 @@ void serialEvent(Serial port) {
       fileoutput.writeRawData_dataPacket(dataPacketBuff[curDataPacketInd], openBCI.get_scale_fac_uVolts_per_count(), openBCI.get_scale_fac_accel_G_per_count());
 
       //raw osc
-      OscMessage myMessage = new OscMessage("/raw");
+      //OscMessage myMessage = new OscMessage("/raw");
+      OscMessage myMessage = new OscMessage(OscPath);
       for (int Ichan=0; Ichan < nchan; Ichan++) {
         myMessage.add(dataPacketBuff[curDataPacketInd].values[Ichan]* openBCI.get_scale_fac_uVolts_per_count());
       }
