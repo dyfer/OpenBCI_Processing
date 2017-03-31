@@ -50,8 +50,8 @@ final float TCPSamplingRatio = 1.024;
 // end of OpenVoBE
 
 int oscSendToPort = 8100;
-String oscSendToHost = "10.45.0.103"; //use "127.0.0.1" for sending to another app on the same computer
-String OscPath = "/raw1"; //configurable
+String oscSendToHost = "localhost"; //use "127.0.0.1" for sending to another app on the same computer
+String OscPath = "/raw"; //configurable
 
 boolean isVerbose = false; //set true if you want more verbosity in console.. verbosePrint("print_this_thing") is used to output feedback when isVerbose = true
 

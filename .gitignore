@@ -29,3 +29,7 @@ $RECYCLE.BIN/
 .DS_Store
 
 
+class_examples/01.3 csv to wave converter in SuperCollider/tempIn.wav
+class_examples/01.3 csv to wave converter in SuperCollider/tempOut.wav
+class_examples/05.01 Galvanic Skin Response python/pyneulog/data/20160531_172059.dat
+class_examples/05.01 Galvanic Skin Response python/pyneulog/data/20160531_172747.dat
